@@ -1,9 +1,23 @@
-add_library(nexus_net INTERFACE)
-add_library(NexusRPC::net ALIAS nexus_net)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(Threads REQUIRED)
 
-target_include_directories(nexus_net INTERFACE
-    ${PROJECT_SOURCE_DIR}/include
-)
+    add_library(nexus_net STATIC
+        net/buffer.cpp
+        net/channel.cpp
+        net/event_loop.cpp
+    )
+    target_link_libraries(nexus_net PUBLIC Threads::Threads)
+    target_include_directories(nexus_net PUBLIC
+        ${PROJECT_SOURCE_DIR}/include
+    )
+else()
+    add_library(nexus_net INTERFACE)
+    target_include_directories(nexus_net INTERFACE
+        ${PROJECT_SOURCE_DIR}/include
+    )
+endif()
+
+add_library(NexusRPC::net ALIAS nexus_net)
 
 add_library(nexus_rpc INTERFACE)
 add_library(NexusRPC::rpc ALIAS nexus_rpc)

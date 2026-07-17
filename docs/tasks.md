@@ -26,14 +26,14 @@
 
 ## Phase 1：MVP 网络与 RPC
 
-### TASK-010 实现 Buffer 和 EventLoop
+### TASK-010 实现 Buffer 和 EventLoop `[代码完成，待测试]`
 
 - 目标：实现 ET 读写 Buffer、eventfd 唤醒和任务投递。
 - 输入：Linux epoll API。
 - 输出：`include/nexus/net` 和 `src/net` 实现。
 - 依赖：TASK-002。
-- 验收：半包/粘包、跨线程投递和关闭流程正确。
-- 测试：Buffer 单测、EventLoop 线程测试、ASan。
+- 验收：已完成 Buffer、Channel、EventLoop 的 Linux 实现和 CMake 接入；半包/粘包、跨线程投递和关闭流程待在 Linux 环境验证。
+- 测试：暂未执行，按约定由后续开发环境完成 Buffer 单测、EventLoop 线程测试和 ASan。
 - 风险：Channel 生命周期和 EventLoop 所属线程不一致。
 
 ### TASK-011 实现 TCP Server/Connection
