@@ -1,0 +1,28 @@
+# Build outputs
+/build/
+/build-*/
+/cmake-build-*/
+/out/
+
+# Generated files
+/proto/generated/
+
+# IDE files
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Test and coverage outputs
+/coverage/
+*.gcda
+*.gcno
+*.gcov
+
+# Platform files
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+*.local.toml

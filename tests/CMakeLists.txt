@@ -1,0 +1,14 @@
+add_library(nexus_test_support INTERFACE)
+add_library(NexusRPC::test_support ALIAS nexus_test_support)
+target_link_libraries(nexus_test_support INTERFACE nexus_net nexus_rpc nexus_mcp)
+
+add_library(nexus_unit_tests INTERFACE)
+add_library(NexusRPC::unit_tests ALIAS nexus_unit_tests)
+target_link_libraries(nexus_unit_tests INTERFACE nexus_test_support)
+
+add_library(nexus_integration_tests INTERFACE)
+add_library(NexusRPC::integration_tests ALIAS nexus_integration_tests)
+target_link_libraries(nexus_integration_tests INTERFACE nexus_test_support)
+
+add_subdirectory(unit)
+add_subdirectory(integration)

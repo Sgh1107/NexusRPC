@@ -1,0 +1,2 @@
+add_library(nexus_integration_test_sources INTERFACE)
+target_link_libraries(nexus_integration_test_sources INTERFACE nexus_integration_tests)
