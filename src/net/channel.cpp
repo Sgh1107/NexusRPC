@@ -102,6 +102,10 @@ bool Channel::isNoneEvent() const noexcept {
     return events_ == 0;
 }
 
+bool Channel::isWriting() const noexcept {
+    return (events_ & EPOLLOUT) != 0;
+}
+
 void Channel::update() {
     loop_->updateChannel(this);
 }

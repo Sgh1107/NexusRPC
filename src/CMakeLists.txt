@@ -5,6 +5,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         net/buffer.cpp
         net/channel.cpp
         net/event_loop.cpp
+        net/socket.cpp
+        net/acceptor.cpp
+        net/tcp_connection.cpp
+        net/tcp_server.cpp
     )
     target_link_libraries(nexus_net PUBLIC Threads::Threads)
     target_include_directories(nexus_net PUBLIC

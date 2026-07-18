@@ -15,52 +15,55 @@ class EventLoop;
  * alive until the channel is removed from its EventLoop.
  */
 class Channel {
-public:
-    using EventCallback = std::function<void()>;
+ public:
+  using EventCallback = std::function<void()>;
 
-    Channel(EventLoop* loop, int fd);
-    ~Channel() = default;
+  Channel(EventLoop* loop, int fd);
+  ~Channel() = default;
 
-    Channel(const Channel&) = delete;
-    Channel& operator=(const Channel&) = delete;
+  Channel(const Channel&) = delete;
+  Channel& operator=(const Channel&) = delete;
 
-    void handleEvent();
+  void handleEvent();
 
-    void setReadCallback(EventCallback callback);
-    void setWriteCallback(EventCallback callback);
-    void setCloseCallback(EventCallback callback);
-    void setErrorCallback(EventCallback callback);
+  void setReadCallback(EventCallback callback);
+  void setWriteCallback(EventCallback callback);
+  void setCloseCallback(EventCallback callback);
+  void setErrorCallback(EventCallback callback);
 
-    void enableReading();
-    void disableReading();
-    void enableWriting();
-    void disableWriting();
-    void disableAll();
-    void remove();
+  void enableReading();
+  void disableReading();
+  void enableWriting();
+  void disableWriting();
+  void disableAll();
+  void remove();
 
-    int fd() const noexcept;
-    std::uint32_t events() const noexcept;
-    bool isNoneEvent() const noexcept;
+  int fd() const noexcept;
+  std::uint32_t events() const noexcept;
+  bool isNoneEvent() const noexcept;
 
-private:
-    friend class EventLoop;
+  /// Returns true if the channel is interested in EPOLLOUT events.
+  bool isWriting() const noexcept;
 
-    static constexpr int kNew = -1;
-    static constexpr int kAdded = 1;
-    static constexpr int kDeleted = 2;
+ private:
+  friend class EventLoop;
 
-    void update();
+  static constexpr int kNew = -1;
+  static constexpr int kAdded = 1;
+  static constexpr int kDeleted = 2;
 
-    EventLoop* loop_;
-    const int fd_;
-    std::uint32_t events_;
-    std::uint32_t revents_;
-    int index_;
+  void update();
 
-    EventCallback read_callback_;
-    EventCallback write_callback_;
-    EventCallback close_callback_;
-    EventCallback error_callback_;
+  EventLoop* loop_;
+  const int fd_;
+  std::uint32_t events_;
+  std::uint32_t revents_;
+  int index_;
+
+  EventCallback read_callback_;
+  EventCallback write_callback_;
+  EventCallback close_callback_;
+  EventCallback error_callback_;
 };
 
 }  // namespace nexus::net
