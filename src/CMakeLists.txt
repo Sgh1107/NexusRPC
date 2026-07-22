@@ -23,12 +23,24 @@ endif()
 
 add_library(NexusRPC::net ALIAS nexus_net)
 
-add_library(nexus_rpc INTERFACE)
+# ---- nexus_rpc ------------------------------------------------------------
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_library(nexus_rpc STATIC
+        rpc/frame_codec.cpp
+    )
+    target_link_libraries(nexus_rpc PUBLIC nexus_net)
+    target_include_directories(nexus_rpc PUBLIC
+        ${PROJECT_SOURCE_DIR}/include
+    )
+else()
+    add_library(nexus_rpc INTERFACE)
+    target_link_libraries(nexus_rpc INTERFACE nexus_net)
+    target_include_directories(nexus_rpc INTERFACE
+        ${PROJECT_SOURCE_DIR}/include
+    )
+endif()
+
 add_library(NexusRPC::rpc ALIAS nexus_rpc)
-target_link_libraries(nexus_rpc INTERFACE nexus_net)
-target_include_directories(nexus_rpc INTERFACE
-    ${PROJECT_SOURCE_DIR}/include
-)
 
 add_library(nexus_mcp INTERFACE)
 add_library(NexusRPC::mcp ALIAS nexus_mcp)

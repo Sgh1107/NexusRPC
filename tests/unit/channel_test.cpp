@@ -1,3 +1,4 @@
+#include <sys/epoll.h>
 #include <gtest/gtest.h>
 
 #include <sys/socket.h>

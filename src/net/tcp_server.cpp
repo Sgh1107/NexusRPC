@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "nexus/net/event_loop.h"
-#include "src/net/acceptor.h"
+#include "acceptor.h"
 
 namespace nexus::net {
 
@@ -111,7 +111,7 @@ void TcpServer::onNewConnection(int fd, const InetAddress& peer_addr) {
         [this, c]() { removeConnectionInLoop(c); });
   };
 
-  // Insert into map (main loop only — protected by mutex for sub-reactor reads).
+  // Insert into map (main loop only ??protected by mutex for sub-reactor reads).
   {
     std::lock_guard<std::mutex> lock(connections_mutex_);
     connections_[conn->name()] = conn;
@@ -152,7 +152,7 @@ EventLoop* TcpServer::getNextSubLoop() {
     return main_loop_;
   }
   const std::uint32_t index =
-      next_sub_loop_index_.fetch_add(1, std::memory_order_relaxed) %
+      next_sub_loop_index_++ %
       sub_loops_.size();
   return sub_loops_[index];
 }

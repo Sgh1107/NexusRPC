@@ -1,6 +1,7 @@
 #include "nexus/net/socket.h"
 
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <stdexcept>
 #include <system_error>
@@ -25,8 +26,7 @@ InetAddress::InetAddress(uint16_t port) {
 }
 
 InetAddress InetAddress::loopback(uint16_t port) {
-  InetAddress addr;
-  addr.addr_.sin_family = AF_INET;
+  InetAddress addr(port);
   addr.addr_.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   addr.addr_.sin_port = htons(port);
   return addr;

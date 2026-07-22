@@ -38,7 +38,7 @@ TcpConnection::TcpConnection(EventLoop* loop, std::string name, int fd,
 }
 
 TcpConnection::~TcpConnection() {
-  assert(state_ == State::kDisconnected);
+  assert(state_ == State::kDisconnected || state_ == State::kConnecting);
   if (fd_ >= 0) {
     ::close(fd_);
   }

@@ -42,10 +42,10 @@ TEST(BufferTest, AppendAndRetrieve) {
 
 TEST(BufferTest, AppendAndRetrievePartial) {
   Buffer buf;
-  buf.append("Hello, World!");
+  buf.append("Hello, World");
   EXPECT_EQ(buf.retrieveAsString(5), "Hello");
   EXPECT_EQ(buf.readableBytes(), 7U);
-  EXPECT_EQ(buf.retrieveAllAsString(), ", World!");
+  EXPECT_EQ(buf.retrieveAllAsString(), ", World");
 }
 
 TEST(BufferTest, AppendOverBoundary) {
@@ -168,7 +168,7 @@ TEST(BufferTest, EnsureWritableSpace) {
 }
 
 // ============================================================================
-// makeSpace (internal) — test via append after consume
+// makeSpace (internal) ??test via append after consume
 // ============================================================================
 
 TEST(BufferTest, MakeSpaceByConsuming) {

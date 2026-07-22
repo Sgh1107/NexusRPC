@@ -51,8 +51,10 @@ public:
     bool isInLoopThread() const noexcept;
     bool isLooping() const noexcept;
 
-private:
+    /// Asserts that the caller is running on this loop's thread.
     void assertInLoopThread() const;
+
+private:
     void wakeup() noexcept;
     void handleWakeupRead() noexcept;
     void doPendingFunctors();

@@ -1,3 +1,5 @@
+#include <arpa/inet.h>
+#include <cstring>
 #include <gtest/gtest.h>
 
 #include <string>
@@ -62,7 +64,7 @@ TEST(SocketTest, CreateAndDestroy) {
   EXPECT_GE(fd, 0);
   Socket sock(fd);
   EXPECT_EQ(sock.fd(), fd);
-  // Socket destroyed at end of scope → fd closed.
+  // Socket destroyed at end of scope ??fd closed.
 }
 
 TEST(SocketTest, MoveSemantics) {

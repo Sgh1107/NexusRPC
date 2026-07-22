@@ -1,12 +1,13 @@
 include(FetchContent)
 
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        v1.14.0
-)
-FetchContent_MakeAvailable(googletest)
+# FetchContent_Declare(
+#   googletest
+#   GIT_REPOSITORY https://github.com/google/googletest.git
+#   GIT_TAG        v1.14.0
+# )
+# FetchContent_MakeAvailable(googletest)
 
+find_package(GTest REQUIRED)
 include(GoogleTest)
 
 # ---- Buffer unit tests ----------------------------------------------------
@@ -58,3 +59,13 @@ target_link_libraries(tcp_server_test
 )
 target_include_directories(tcp_server_test PRIVATE ${PROJECT_SOURCE_DIR})
 gtest_discover_tests(tcp_server_test)
+
+# ---- RPC Frame Codec unit tests (TASK-012) --------------------------------
+add_executable(frame_codec_test frame_codec_test.cpp)
+target_link_libraries(frame_codec_test
+  PRIVATE
+    nexus_rpc
+    GTest::gtest_main
+)
+target_include_directories(frame_codec_test PRIVATE ${PROJECT_SOURCE_DIR})
+gtest_discover_tests(frame_codec_test)

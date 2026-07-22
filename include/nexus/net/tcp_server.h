@@ -16,6 +16,7 @@
 namespace nexus::net {
 
 class EventLoop;
+class Acceptor;
 
 /**
  * Multi-reactor TCP server (main/sub reactor pattern).
@@ -82,7 +83,6 @@ class TcpServer {
   std::vector<EventLoop*> sub_loops_;
   std::vector<std::unique_ptr<std::thread>> threads_;
 
-  class Acceptor;
   std::unique_ptr<Acceptor> acceptor_;
 
   std::unordered_map<std::string, std::shared_ptr<TcpConnection>> connections_;
