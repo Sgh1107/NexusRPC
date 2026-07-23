@@ -69,3 +69,15 @@ target_link_libraries(frame_codec_test
 )
 target_include_directories(frame_codec_test PRIVATE ${PROJECT_SOURCE_DIR})
 gtest_discover_tests(frame_codec_test)
+
+# ---- RPC Server / Client SDK loopback tests (TASK-013, TASK-014) ---------
+add_executable(rpc_sdk_test rpc_sdk_test.cpp)
+target_link_libraries(rpc_sdk_test
+  PRIVATE
+    nexus_rpc
+    GTest::gtest_main
+)
+target_include_directories(rpc_sdk_test PRIVATE ${PROJECT_SOURCE_DIR})
+gtest_discover_tests(rpc_sdk_test)
+
+

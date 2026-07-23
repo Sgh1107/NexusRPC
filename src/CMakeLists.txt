@@ -25,16 +25,20 @@ add_library(NexusRPC::net ALIAS nexus_net)
 
 # ---- nexus_rpc ------------------------------------------------------------
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_library(nexus_rpc STATIC
+        add_library(nexus_rpc STATIC
         rpc/frame_codec.cpp
+        rpc/rpc_client.cpp
+        rpc/rpc_server.cpp
     )
-    target_link_libraries(nexus_rpc PUBLIC nexus_net)
+    target_link_libraries(nexus_rpc PUBLIC nexus_net nexus_proto)
     target_include_directories(nexus_rpc PUBLIC
         ${PROJECT_SOURCE_DIR}/include
     )
+
 else()
     add_library(nexus_rpc INTERFACE)
-    target_link_libraries(nexus_rpc INTERFACE nexus_net)
+        target_link_libraries(nexus_rpc INTERFACE nexus_net nexus_proto)
+
     target_include_directories(nexus_rpc INTERFACE
         ${PROJECT_SOURCE_DIR}/include
     )

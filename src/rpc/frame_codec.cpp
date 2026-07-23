@@ -380,11 +380,17 @@ ParseResult FrameParser::feed(const std::uint8_t* data, std::size_t length) {
     return ParseResult::kInternalError;
   }
 
-  buffer_.insert(buffer_.end(), data, data + length);
+  if (length != 0) {
+    if (data == nullptr) {
+      return ParseResult::kInternalError;
+    }
+    buffer_.insert(buffer_.end(), data, data + length);
+  }
 
   if (state_ == ParseState::kNeedHeader) {
     if (buffer_.size() < kFixedHeaderSize) {
       return ParseResult::kNeedMoreData;
+
     }
 
     ParseResult result = decodeHeader(buffer_.data(), &header_);

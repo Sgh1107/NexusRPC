@@ -36,7 +36,7 @@
 - 测试：暂未执行，按约定由后续开发环境完成 Buffer 单测、EventLoop 线程测试和 ASan。
 - 风险：Channel 生命周期和 EventLoop 所属线程不一致。
 
-### TASK-011 实现 TCP Server/Connection
+### TASK-011 实现 TCP Server/Connection `[代码完成，待测试]`
 
 - 目标：主从 Reactor、accept 分发和非阻塞读写。
 - 依赖：TASK-010。
@@ -45,7 +45,7 @@
 - 测试：TCP 端到端、半包、并发连接。
 - 风险：ET 模式未读尽数据造成连接饥饿。
 
-### TASK-012 实现 RPC Frame Codec
+### TASK-012 实现 RPC Frame Codec `[代码完成，待测试]`
 
 - 目标：完成 32 字节头、metadata、Protobuf body 的编解码。
 - 依赖：TASK-002。
@@ -53,21 +53,23 @@
 - 测试：协议边界、截断、溢出、未知类型。
 - 风险：直接发送 packed struct 或整数溢出。
 
-### TASK-013 实现 RPC Server SDK
+### TASK-013 实现 RPC Server SDK `[代码完成，待测试]`
 
 - 目标：实现 handler 注册、请求分发和 Unary response。
 - 依赖：TASK-011、TASK-012。
-- 验收：`registerService(service, method, handler)` 可注册并调用。
-- 测试：成功、未找到、handler 错误、超时和异常映射。
-- 风险：业务 handler 阻塞 IO 线程。
+- 验收：已完成 raw `registerService(service, method, handler)` 及 `registerService<Request, Response>`；typed handler 使用生成 Protobuf 消息完成反序列化、调用和响应序列化。
+- 测试：已补 Server/Client raw loopback、typed Protobuf `StringValue` loopback、未找到和重复注册覆盖；未执行。
+- 风险：业务 handler 阻塞 IO 线程。handler 已投递到 Server 自有 worker 线程，停止期间仍需在 Linux 环境验证。
 
-### TASK-014 实现 RPC Client SDK
+### TASK-014 实现 RPC Client SDK `[代码完成，待测试]`
 
 - 目标：实现同步 call、future/callback 包装、deadline。
 - 依赖：TASK-011、TASK-012。
-- 验收：可调用 Weather 和 Echo；迟到响应不会污染后续请求。
-- 测试：成功、连接失败、超时、断连、重复 request ID。
-- 风险：v1 单连接串行，必须明确并发调用限制。
+- 验收：已完成 raw transport 与 typed `call<Request, Response>`，后者使用生成 Protobuf 类型完成序列化和响应解析；并包含单连接串行、随机起始递增 request ID、失败后关闭重连及 future/callback 包装。
+- 测试：已补 raw 和 typed Protobuf 成功、服务端 `NOT_FOUND` loopback 覆盖；连接失败、超时、断连和 request ID 边界待执行与扩展。
+- 风险：v1 单连接串行，必须明确并发调用限制。实现以互斥锁强制串行化。
+
+
 
 ### TASK-015 建立示例 Proto 和服务
 

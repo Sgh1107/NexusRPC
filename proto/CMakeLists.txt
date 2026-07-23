@@ -1,5 +1,7 @@
+find_package(Protobuf REQUIRED)
+
 add_library(nexus_proto INTERFACE)
 add_library(NexusRPC::proto ALIAS nexus_proto)
+target_link_libraries(nexus_proto INTERFACE protobuf::libprotobuf)
 
-# Protobuf generation is intentionally not configured in Phase 0.
-# The target exists to reserve the ownership boundary for generated interfaces.
+# Generated application .pb.cc files will be added to this target by TASK-015.

@@ -1,3 +1,6 @@
 # RPC Headers
 
-Reserved for public RPC status, protocol, client, server and governance APIs. Phase 0 contains no implementation headers.
+Public RPC status, frame protocol, raw transport, and typed Protobuf client and
+server APIs. The raw body interfaces are the transport boundary; application
+code should use `RpcClient::call<Request, Response>` and
+`RpcServer::registerService<Request, Response>` with generated Protobuf types.
