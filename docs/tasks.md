@@ -1,169 +1,171 @@
-﻿# NexusRPC 鍙墽琛屼换鍔℃竻鍗?
+# NexusRPC 可执行任务清单
 
-> 浠诲姟鎸変緷璧栭『搴忔帓鍒椼€傛瘡椤瑰畬鎴愬悗蹇呴』琛ユ祴璇曞苟鏇存柊瀵瑰簲鏂囨。銆?
+> 任务按依赖顺序排列。每项完成后必须补测试并更新对应文档。
 
-## Phase 0锛氬伐绋嬬洰褰曢鏋?
+## Phase 0：工程目录骨架
 
-### TASK-001 寤虹珛椤圭洰鐩綍 `[瀹屾垚]`
+### TASK-001 建立项目目录 `[完成]`
 
-- 鐩爣锛氬垱寤?`include/nexus`銆乣src`銆乣proto`銆乣examples`銆乣tests`銆乣benchmarks`銆乣scripts`銆乣tools`銆乣config`銆乣cmake` 鍜?`.github/workflows`銆?
-- 杈撳叆锛氬ぇ绾茬洰褰曠粨鏋勩€乣docs/development_decisions.md`銆?
-- 杈撳嚭锛氱洰褰曘€佹ā鍧?README銆佹枃浠惰亴璐ｆ竻鍗曘€丆Make 瀛愮洰褰曞叆鍙ｅ崰浣嶃€?
-- 渚濊禆锛氭棤銆?
-- 楠屾敹锛氱洰褰曠粨鏋勪笌 `docs/design.md` 涓€鑷达紱绌虹洰褰曚娇鐢?`.gitkeep` 鎴?README 淇濈暀锛涗笉鍖呭惈渚濊禆瀹夎鍜屼笟鍔″疄鐜般€?
-- 娴嬭瘯锛氬凡瀹屾垚鐩綍鍜屽叧閿枃浠堕潤鎬佹鏌ャ€?
-- 椋庨櫓锛氳繃鏃╁垱寤鸿繃澶氱┖鏂囦欢瀵艰嚧鑱岃矗婕傜Щ銆?
+- 目标：创建 `include/nexus`、`src`、`proto`、`examples`、`tests`、`benchmarks`、`scripts`、`tools`、`config`、`cmake` 和 `.github/workflows`。
+- 输入：大纲目录结构、`docs/development_decisions.md`。
+- 输出：目录、模块 README、文件职责清单、CMake 子目录入口占位。
+- 依赖：无。
+- 验收：目录结构与 `docs/design.md` 一致；空目录使用 `.gitkeep` 或 README 保留；不包含依赖安装和业务实现。
+- 测试：已完成目录和关键文件静态检查。
+- 风险：过早创建过多空文件导致职责漂移。
 
-### TASK-002 寤虹珛鏋勫缓鐩爣鍗犱綅 `[瀹屾垚]`
+### TASK-002 建立构建目标占位 `[完成]`
 
-- 鐩爣锛氬畾涔?`nexus_net`銆乣nexus_rpc`銆乣nexus_mcp`銆乣nexus_registry`銆乣nexus_observability`銆乪xamples 鍜?tests 鐨?target 杈圭晫銆?
-- 杈撳叆锛氱洰褰曢鏋躲€?
-- 杈撳嚭锛氶《灞傚拰瀛愮洰褰?CMake 鏂囦欢銆乼arget 渚濊禆鍥俱€?
-- 渚濊禆锛歍ASK-001銆?
-- 楠屾敹锛氭瀯寤烘枃浠跺彧琛ㄨ揪 target 鍜屾簮鏂囦欢杈圭晫锛屼笉瑕佹眰瀹夎渚濊禆鎴栧畬鎴愮紪璇戦獙璇併€?
-- 娴嬭瘯锛氬凡瀹屾垚 CMake 鏂囦欢鍜?target 渚濊禆鏂瑰悜闈欐€佹鏌ワ紱鏈墽琛岀幆澧冮獙璇併€?
-- 椋庨櫓锛氭ā鍧楀惊鐜緷璧栥€傚叕鍏辩被鍨嬪簲鏀惧叆浣庡眰鍏叡澶存枃浠躲€?
+- 目标：定义 `nexus_net`、`nexus_rpc`、`nexus_mcp`、`nexus_registry`、`nexus_observability`、examples 和 tests 的 target 边界。
+- 输入：目录骨架。
+- 输出：顶层和子目录 CMake 文件、target 依赖图。
+- 依赖：TASK-001。
+- 验收：构建文件只表达 target 和源文件边界，不要求安装依赖或完成编译验证。
+- 测试：已完成 CMake 文件和 target 依赖方向静态检查；未执行环境验证。
+- 风险：模块循环依赖。公共类型应放入低层公共头文件。
 
-## Phase 1锛歁VP 缃戠粶涓?RPC
+## Phase 1：MVP 网络与 RPC
 
-### TASK-010 实现 Buffer 和 EventLoop [代码完成，Buffer 单测通过，EventLoop 待集成测试] 瀹炵幇 Buffer 鍜?EventLoop `[浠ｇ爜瀹屾垚锛屽緟娴嬭瘯]`
+### TASK-010 实现 Buffer 和 EventLoop `[代码完成，待测试]`
 
-- 鐩爣锛氬疄鐜?ET 璇诲啓 Buffer銆乪ventfd 鍞ら啋鍜屼换鍔℃姇閫掋€?
-- 杈撳叆锛歀inux epoll API銆?
-- 杈撳嚭锛歚include/nexus/net` 鍜?`src/net` 瀹炵幇銆?
-- 渚濊禆锛歍ASK-002銆?
-- 楠屾敹锛氬凡瀹屾垚 Buffer銆丆hannel銆丒ventLoop 鐨?Linux 瀹炵幇鍜?CMake 鎺ュ叆锛涘崐鍖?绮樺寘銆佽法绾跨▼鎶曢€掑拰鍏抽棴娴佺▼寰呭湪 Linux 鐜楠岃瘉銆?
-- 娴嬭瘯锛氭殏鏈墽琛岋紝鎸夌害瀹氱敱鍚庣画寮€鍙戠幆澧冨畬鎴?Buffer 鍗曟祴銆丒ventLoop 绾跨▼娴嬭瘯鍜?ASan銆?
-- 椋庨櫓锛欳hannel 鐢熷懡鍛ㄦ湡鍜?EventLoop 鎵€灞炵嚎绋嬩笉涓€鑷淬€?
+- 目标：实现 ET 读写 Buffer、eventfd 唤醒和任务投递。
+- 输入：Linux epoll API。
+- 输出：`include/nexus/net` 和 `src/net` 实现。
+- 依赖：TASK-002。
+- 验收：已完成 Buffer、Channel、EventLoop 的 Linux 实现和 CMake 接入；半包/粘包、跨线程投递和关闭流程待在 Linux 环境验证。
+- 测试：暂未执行，按约定由后续开发环境完成 Buffer 单测、EventLoop 线程测试和 ASan。
+- 风险：Channel 生命周期和 EventLoop 所属线程不一致。
 
-### TASK-011 瀹炵幇 TCP Server/Connection `[浠ｇ爜瀹屾垚锛孴cpConnection/TcpServer 鏋勯€犲拰鍩烘湰鍥炶皟璁剧疆 7 椤瑰崟鍏冩祴璇曢€氳繃锛岀綉缁?IO 閮ㄥ垎寰呴泦鎴愭祴璇昡`
-- 鐩爣锛氫富浠?Reactor銆乤ccept 鍒嗗彂鍜岄潪闃诲璇诲啓銆?
-- 渚濊禆锛歍ASK-010銆?
-- 杈撳嚭锛歍CP Server API銆丆onnection 鍥炶皟鍜?Echo 楠ㄦ灦銆?
-- 楠屾敹锛欵cho 鍙鐞嗗娆¤鍐欍€佹柇杩炲拰浼橀泤鍋滄銆?
-- 娴嬭瘯锛歍CP 绔埌绔€佸崐鍖呫€佸苟鍙戣繛鎺ャ€?
-- 椋庨櫓锛欵T 妯″紡鏈灏芥暟鎹€犳垚杩炴帴楗ラタ銆?
+### TASK-011 实现 TCP Server/Connection
 
-### TASK-012 瀹炵幇 RPC Frame Codec `[瀹屾垚]`
-- 鐩爣锛氬畬鎴?32 瀛楄妭澶淬€乵etadata銆丳rotobuf body 鐨勭紪瑙ｇ爜銆?
-- 渚濊禆锛歍ASK-002銆?
-- 楠屾敹锛欱ig Endian銆侀暱搴︿笂闄愩€侀潪娉曞瓧娈靛拰淇濈暀瀛楁瑙勫垯绗﹀悎 `docs/protocol.md`銆?
-- 娴嬭瘯锛氬崗璁竟鐣屻€佹埅鏂€佹孩鍑恒€佹湭鐭ョ被鍨嬨€?
-- 椋庨櫓锛氱洿鎺ュ彂閫?packed struct 鎴栨暣鏁版孩鍑恒€?
+- 目标：主从 Reactor、accept 分发和非阻塞读写。
+- 依赖：TASK-010。
+- 输出：TCP Server API、Connection 回调和 Echo 骨架。
+- 验收：Echo 可处理多次读写、断连和优雅停止。
+- 测试：TCP 端到端、半包、并发连接。
+- 风险：ET 模式未读尽数据造成连接饥饿。
 
-### TASK-013 瀹炵幇 RPC Server SDK
+### TASK-012 实现 RPC Frame Codec
 
-- 鐩爣锛氬疄鐜?handler 娉ㄥ唽銆佽姹傚垎鍙戝拰 Unary response銆?
-- 渚濊禆锛歍ASK-011銆乀ASK-012銆?
-- 楠屾敹锛歚registerService(service, method, handler)` 鍙敞鍐屽苟璋冪敤銆?
-- 娴嬭瘯锛氭垚鍔熴€佹湭鎵惧埌銆乭andler 閿欒銆佽秴鏃跺拰寮傚父鏄犲皠銆?
-- 椋庨櫓锛氫笟鍔?handler 闃诲 IO 绾跨▼銆?
+- 目标：完成 32 字节头、metadata、Protobuf body 的编解码。
+- 依赖：TASK-002。
+- 验收：Big Endian、长度上限、非法字段和保留字段规则符合 `docs/protocol.md`。
+- 测试：协议边界、截断、溢出、未知类型。
+- 风险：直接发送 packed struct 或整数溢出。
 
-### TASK-014 瀹炵幇 RPC Client SDK
+### TASK-013 实现 RPC Server SDK
 
-- 鐩爣锛氬疄鐜板悓姝?call銆乫uture/callback 鍖呰銆乨eadline銆?
-- 渚濊禆锛歍ASK-011銆乀ASK-012銆?
-- 楠屾敹锛氬彲璋冪敤 Weather 鍜?Echo锛涜繜鍒板搷搴斾笉浼氭薄鏌撳悗缁姹傘€?
-- 娴嬭瘯锛氭垚鍔熴€佽繛鎺ュけ璐ャ€佽秴鏃躲€佹柇杩炪€侀噸澶?request ID銆?
-- 椋庨櫓锛歷1 鍗曡繛鎺ヤ覆琛岋紝蹇呴』鏄庣‘骞跺彂璋冪敤闄愬埗銆?
+- 目标：实现 handler 注册、请求分发和 Unary response。
+- 依赖：TASK-011、TASK-012。
+- 验收：`registerService(service, method, handler)` 可注册并调用。
+- 测试：成功、未找到、handler 错误、超时和异常映射。
+- 风险：业务 handler 阻塞 IO 线程。
 
-### TASK-015 寤虹珛绀轰緥 Proto 鍜屾湇鍔?
+### TASK-014 实现 RPC Client SDK
 
-- 鐩爣锛氬垱寤?`rpc.proto`銆乣options.proto`銆乣weather.proto`銆乄eather 鍜?Echo 鏈嶅姟銆?
-- 渚濊禆锛歍ASK-013銆乀ASK-014銆?
-- 楠屾敹锛歐eather 鐩戝惉 `9601`锛孍cho 鐩戝惉 `9602`锛屽潎閫氳繃 SDK 鎻愪緵鏈嶅姟銆?
-- 娴嬭瘯锛氱湡瀹?TCP 闂幆銆?
-- 椋庨櫓锛氱敓鎴愪唬鐮佸拰鎵嬪啓 Stub 鐨勮亴璐ｆ贩娣嗐€?
+- 目标：实现同步 call、future/callback 包装、deadline。
+- 依赖：TASK-011、TASK-012。
+- 验收：可调用 Weather 和 Echo；迟到响应不会污染后续请求。
+- 测试：成功、连接失败、超时、断连、重复 request ID。
+- 风险：v1 单连接串行，必须明确并发调用限制。
 
-## Phase 2锛歁CP stdio MVP
+### TASK-015 建立示例 Proto 和服务
 
-### TASK-020 瀹炵幇 JSON-RPC
+- 目标：创建 `rpc.proto`、`options.proto`、`weather.proto`、Weather 和 Echo 服务。
+- 依赖：TASK-013、TASK-014。
+- 验收：Weather 监听 `9601`，Echo 监听 `9602`，均通过 SDK 提供服务。
+- 测试：真实 TCP 闭环。
+- 风险：生成代码和手写 Stub 的职责混淆。
 
-- 鐩爣锛氳В鏋愯姹傘€佹瀯閫犲搷搴斿拰閿欒锛屼弗鏍煎鐞?Notification銆?
-- 渚濊禆锛歍ASK-002銆?
-- 楠屾敹锛氭敮鎸?`initialize`銆乣initialized`銆乣ping`銆侀敊璇爜銆?
-- 娴嬭瘯锛氳В鏋愬け璐ャ€佹壒閲忔暟缁勩€侀敊璇?id銆佹棤鍝嶅簲 Notification銆?
-- 椋庨櫓锛歴tdout 娣峰叆鏃ュ織鐮村潖 stdio 鍗忚銆?
+## Phase 2：MCP stdio MVP
 
-### TASK-021 瀹炵幇 Protobuf Tool Registry
+### TASK-020 实现 JSON-RPC
 
-- 鐩爣锛氫粠鐢熸垚 Descriptor 鍜?options 鐢熸垚 Tool 鍏冩暟鎹€?
-- 渚濊禆锛歍ASK-015銆乀ASK-020銆?
-- 楠屾敹锛氱敓鎴?`weather.get_current`锛孲chema 浣跨敤 json_name锛屽繀濉潵婧愭纭€?
-- 娴嬭瘯锛氬熀纭€绫诲瀷銆佸祵濂椼€乵ap銆乺epeated銆乀imestamp銆亀rapper銆?
-- 椋庨櫓锛歰neof 鍜?Any 鎸夊喅绛栭檷绾э紝涓嶅彲浼鎴愬畬鏁存敮鎸併€?
+- 目标：解析请求、构造响应和错误，严格处理 Notification。
+- 依赖：TASK-002。
+- 验收：支持 `initialize`、`initialized`、`ping`、错误码。
+- 测试：解析失败、批量数组、错误 id、无响应 Notification。
+- 风险：stdout 混入日志破坏 stdio 协议。
 
-### TASK-022 瀹炵幇 stdio Gateway
+### TASK-021 实现 Protobuf Tool Registry
 
-- 鐩爣锛氬疄鐜?tools/list銆乼ools/call 鍜?RPC 璺敱銆?
-- 渚濊禆锛歍ASK-014銆乀ASK-020銆乀ASK-021銆?
-- 楠屾敹锛歁CP Inspector 瀹屾垚 Weather 璋冪敤锛岃繑鍥?text 鍜?structuredContent銆?
-- 娴嬭瘯锛氱鍒扮鍜?stderr 鏃ュ織闅旂銆?
-- 椋庨櫓锛歁CP request ID 涓?RPC request ID 鏄犲皠閿欒銆?
+- 目标：从生成 Descriptor 和 options 生成 Tool 元数据。
+- 依赖：TASK-015、TASK-020。
+- 验收：生成 `weather.get_current`，Schema 使用 json_name，必填来源正确。
+- 测试：基础类型、嵌套、map、repeated、Timestamp、wrapper。
+- 风险：oneof 和 Any 按决策降级，不可伪装成完整支持。
 
-## Phase 3锛歷1.1 Registry 涓庢不鐞?
+### TASK-022 实现 stdio Gateway
+
+- 目标：实现 tools/list、tools/call 和 RPC 路由。
+- 依赖：TASK-014、TASK-020、TASK-021。
+- 验收：MCP Inspector 完成 Weather 调用，返回 text 和 structuredContent。
+- 测试：端到端和 stderr 日志隔离。
+- 风险：MCP request ID 与 RPC request ID 映射错误。
+
+## Phase 3：v1.1 Registry 与治理
 
 ### TASK-030 Redis Registry
 
-- 鐩爣锛氬疄鐜?Lua 娉ㄥ唽銆佺画绾︺€佹敞閿€銆乨iscover銆佹竻鐞嗗拰鍏ㄩ噺鍚屾銆?
-- 渚濊禆锛歍ASK-015銆乀ASK-002銆?
-- 楠屾敹锛氱鍚?`docs/registry.md`锛孯edis 澶辫仈鍙寜缂撳瓨瑙勫垯闄嶇骇銆?
-- 娴嬭瘯锛氬瀹炰緥骞跺彂銆乀TL銆丳ub/Sub 閲嶈繛銆丷edis 鏁呴殰娉ㄥ叆銆?
-- 椋庨櫓锛氬閲忎簨浠朵涪澶卞悗鏈叏閲忔仮澶嶃€?
+- 目标：实现 Lua 注册、续约、注销、discover、清理和全量同步。
+- 依赖：TASK-015、TASK-002。
+- 验收：符合 `docs/registry.md`，Redis 失联可按缓存规则降级。
+- 测试：多实例并发、TTL、Pub/Sub 重连、Redis 故障注入。
+- 风险：增量事件丢失后未全量恢复。
 
-### TASK-031 Tool Registry 鍔ㄦ€佹洿鏂?
+### TASK-031 Tool Registry 动态更新
 
-- 鐩爣锛氬皢 Registry ServiceMeta 鏇存柊杞崲涓烘湰鍦板伐鍏疯〃鍙樺寲銆?
-- 渚濊禆锛歍ASK-021銆乀ASK-030銆?
-- 楠屾敹锛氫富鍔ㄤ笂涓嬬嚎灏忎簬 1 绉掗€氱煡 SSE Session銆?
-- 娴嬭瘯锛氶噸澶嶄簨浠躲€佹棫浜嬩欢銆佸疄渚嬭繃鏈熴€?
-- 椋庨櫓锛氬伐鍏烽噸鍚嶏紝闇€瑕佹槑纭啿绐佹嫆缁濈瓥鐣ュ苟璁板綍鏃ュ織銆?
+- 目标：将 Registry ServiceMeta 更新转换为本地工具表变化。
+- 依赖：TASK-021、TASK-030。
+- 验收：主动上下线小于 1 秒通知 SSE Session。
+- 测试：重复事件、旧事件、实例过期。
+- 风险：工具重名，需要明确冲突拒绝策略并记录日志。
 
-### TASK-032 杩炴帴姹犲拰璐熻浇鍧囪　
+### TASK-032 连接池和负载均衡
 
-- 鐩爣锛氭寜瀹炰緥寤烘睜锛屽姞鍏?RoundRobin 鍜?ConsistentHash銆?
-- 渚濊禆锛歍ASK-014銆乀ASK-030銆?
-- 楠屾敹锛氬疄渚嬩笅绾垮仠姝㈡柊鍒嗛厤锛屽凡鏈夎皟鐢ㄥ畬鎴愩€?
-- 娴嬭瘯锛氬苟鍙?acquire/release銆佸け璐ラ€€閬裤€佺┖闂插洖鏀躲€?
-- 椋庨櫓锛氳繛鎺ユ睜閿佺珵浜夊拰杩炴帴鐢熷懡鍛ㄦ湡娉勬紡銆?
+- 目标：按实例建池，加入 RoundRobin 和 ConsistentHash。
+- 依赖：TASK-014、TASK-030。
+- 验收：实例下线停止新分配，已有调用完成。
+- 测试：并发 acquire/release、失败退避、空闲回收。
+- 风险：连接池锁竞争和连接生命周期泄漏。
 
-### TASK-033 鐔旀柇銆侀檺娴併€侀噸璇?
+### TASK-033 熔断、限流、重试
 
-- 鐩爣锛氬疄鐜拌繛缁け璐ョ啍鏂€佷护鐗屾《銆佸箓绛夐噸璇曘€?
-- 渚濊禆锛歍ASK-032銆?
-- 楠屾敹锛欻alfOpen 鍙湁涓€涓帰娴嬭姹傦紱闈炲箓绛夋柟娉曚笉鑷姩閲嶈瘯銆?
-- 娴嬭瘯锛氱姸鎬佽浆鎹€佺獊鍙戦檺娴併€侀€€閬垮拰閿欒鏄犲皠銆?
-- 椋庨櫓锛氬皢涓氬姟閿欒璇垽涓哄彲閲嶈瘯閿欒銆?
+- 目标：实现连续失败熔断、令牌桶、幂等重试。
+- 依赖：TASK-032。
+- 验收：HalfOpen 只有一个探测请求；非幂等方法不自动重试。
+- 测试：状态转换、突发限流、退避和错误映射。
+- 风险：将业务错误误判为可重试错误。
 
 ### TASK-034 Streamable HTTP
 
-- 鐩爣锛氬疄鐜?HTTP/1.1 POST JSON銆丟ET SSE銆丏ELETE 鍜?Session銆?
-- 渚濊禆锛歍ASK-020銆乀ASK-022銆乀ASK-031銆?
-- 楠屾敹锛欼nspector 鍜?Claude Desktop 鍧囧彲 initialize銆乴ist銆乧all銆?
-- 娴嬭瘯锛歨eader 澶у皬鍐欍€乲eep-alive銆丼ession 杩囨湡銆丼SE 閫氱煡銆?
-- 椋庨櫓锛氳嚜鐮?HTTP 瑙ｆ瀽鍣ㄧ殑璇锋眰杈圭晫鍜岄暱杩炴帴娓呯悊銆?
+- 目标：实现 HTTP/1.1 POST JSON、GET SSE、DELETE 和 Session。
+- 依赖：TASK-020、TASK-022、TASK-031。
+- 验收：Inspector 和 Claude Desktop 均可 initialize、list、call。
+- 测试：header 大小写、keep-alive、Session 过期、SSE 通知。
+- 风险：自研 HTTP 解析器的请求边界和长连接清理。
 
-### TASK-035 杩愮淮鎺ュ彛
+### TASK-035 运维接口
 
-- 鐩爣锛氬疄鐜?Prometheus 鎸囨爣銆乴ive/ready/detail 鍋ュ悍妫€鏌ュ拰浼橀泤鍋滄銆?
-- 渚濊禆锛歍ASK-030銆乀ASK-034銆?
-- 楠屾敹锛氬叧闂『搴忓拰 30 绉掔瓑寰呬笂闄愮鍚堣璁°€?
-- 娴嬭瘯锛氫緷璧栧紓甯搞€佸仠姝㈡湡闂存柊璇锋眰鍜屾寚鏍囪鏁般€?
-- 椋庨櫓锛歳eady 涓?live 鐘舵€佹贩娣嗐€?
+- 目标：实现 Prometheus 指标、live/ready/detail 健康检查和优雅停止。
+- 依赖：TASK-030、TASK-034。
+- 验收：关闭顺序和 30 秒等待上限符合设计。
+- 测试：依赖异常、停止期间新请求和指标计数。
+- 风险：ready 与 live 状态混淆。
 
-## Phase 4锛歷1.2 鎬ц兘涓庡彲闈犳€?
+## Phase 4：v1.2 性能与可靠性
 
-### TASK-040 Benchmark 涓庨暱绋宠剼鏈?
+### TASK-040 Benchmark 与长稳脚本
 
-- 鐩爣锛氭彁渚?RPC Echo benchmark銆丳99 鎶ュ憡妯℃澘鍜?7x24 楠屾敹鑴氭湰銆?
-- 渚濊禆锛歍ASK-014銆乀ASK-015銆?
-- 楠屾敹锛氭姤鍛婅褰曞浐瀹氭祴璇曟潯浠讹紝鑴氭湰鍙惎鍔ㄣ€佸仠姝㈠拰鏀堕泦鏁版嵁銆?
-- 娴嬭瘯锛氬皬瑙勬ā smoke benchmark銆?
-- 椋庨櫓锛氭妸 MCP 娴嬭瘯缁撴灉涓?RPC Echo 鎸囨爣娣蜂负涓€璋堛€?
+- 目标：提供 RPC Echo benchmark、P99 报告模板和 7x24 验收脚本。
+- 依赖：TASK-014、TASK-015。
+- 验收：报告记录固定测试条件，脚本可启动、停止和收集数据。
+- 测试：小规模 smoke benchmark。
+- 风险：把 MCP 测试结果与 RPC Echo 指标混为一谈。
 
-### TASK-041 鍙€夊寮?
+### TASK-041 可选增强
 
-- 鑼冨洿锛歋nappy/Zstd銆佸畬鏁?JSON Schema銆佸崗浣滃紡 Cancel銆佺湡瀹?progress銆佹粦鍔ㄧ獥鍙ｇ啍鏂€佸璺鐢ㄣ€?
-- 渚濊禆锛氬搴?v1.1 鍔熻兘绋冲畾骞舵湁鍩哄噯鏁版嵁銆?
-- 楠屾敹锛氭瘡椤瑰寮哄繀椤诲鍔犲崗璁増鏈?鍏煎鎬ц鏄庡拰鍥炲綊娴嬭瘯銆?
-- 椋庨櫓锛氬湪娌℃湁鍩哄噯鏁版嵁鍓嶈繘琛屾棤鐩爣浼樺寲銆?
+- 范围：Snappy/Zstd、完整 JSON Schema、协作式 Cancel、真实 progress、滑动窗口熔断、多路复用。
+- 依赖：对应 v1.1 功能稳定并有基准数据。
+- 验收：每项增强必须增加协议版本/兼容性说明和回归测试。
+- 风险：在没有基准数据前进行无目标优化。
