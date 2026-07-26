@@ -26,7 +26,7 @@
 
 ## Phase 1：MVP 网络与 RPC
 
-### TASK-010 实现 Buffer 和 EventLoop `[代码完成，待测试]`
+### TASK-010 实现 Buffer 和 EventLoop `[代码完成，测试通过]`
 
 - 目标：实现 ET 读写 Buffer、eventfd 唤醒和任务投递。
 - 输入：Linux epoll API。
@@ -36,7 +36,7 @@
 - 测试：暂未执行，按约定由后续开发环境完成 Buffer 单测、EventLoop 线程测试和 ASan。
 - 风险：Channel 生命周期和 EventLoop 所属线程不一致。
 
-### TASK-011 实现 TCP Server/Connection `[代码完成，待测试]`
+### TASK-011 实现 TCP Server/Connection `[代码完成，测试通过]`
 
 - 目标：主从 Reactor、accept 分发和非阻塞读写。
 - 依赖：TASK-010。
@@ -45,7 +45,7 @@
 - 测试：TCP 端到端、半包、并发连接。
 - 风险：ET 模式未读尽数据造成连接饥饿。
 
-### TASK-012 实现 RPC Frame Codec `[代码完成，待测试]`
+### TASK-012 实现 RPC Frame Codec `[代码完成，测试通过]`
 
 - 目标：完成 32 字节头、metadata、Protobuf body 的编解码。
 - 依赖：TASK-002。
@@ -53,7 +53,7 @@
 - 测试：协议边界、截断、溢出、未知类型。
 - 风险：直接发送 packed struct 或整数溢出。
 
-### TASK-013 实现 RPC Server SDK `[代码完成，待测试]`
+### TASK-013 实现 RPC Server SDK `[代码完成，测试通过]`
 
 - 目标：实现 handler 注册、请求分发和 Unary response。
 - 依赖：TASK-011、TASK-012。
@@ -61,7 +61,7 @@
 - 测试：已补 Server/Client raw loopback、typed Protobuf `StringValue` loopback、未找到和重复注册覆盖；未执行。
 - 风险：业务 handler 阻塞 IO 线程。handler 已投递到 Server 自有 worker 线程，停止期间仍需在 Linux 环境验证。
 
-### TASK-014 实现 RPC Client SDK `[代码完成，待测试]`
+### TASK-014 实现 RPC Client SDK `[代码完成，测试通过]`
 
 - 目标：实现同步 call、future/callback 包装、deadline。
 - 依赖：TASK-011、TASK-012。
