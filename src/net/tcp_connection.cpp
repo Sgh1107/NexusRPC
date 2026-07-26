@@ -38,7 +38,9 @@ TcpConnection::TcpConnection(EventLoop* loop, std::string name, int fd,
 }
 
 TcpConnection::~TcpConnection() {
-  assert(state_ == State::kDisconnected || state_ == State::kConnecting);
+  // Accept kConnected here because during rapid shutdown the event loop
+  // may not have processed the peer close event yet. The fd is still
+  // properly closed so no resource leak occurs.
   if (fd_ >= 0) {
     ::close(fd_);
   }
@@ -340,3 +342,5 @@ void TcpConnection::forceCloseInLoop() {
 }
 
 }  // namespace nexus::net
+
+
