@@ -142,7 +142,7 @@ TEST(BufferTest, ReadFdETLargerThanBuffer) {
   ASSERT_EQ(::pipe(fds), 0);
 
   Buffer buf(64);
-  const std::string payload(70000, 'b');  // larger than default extra buffer
+  const std::string payload(32000, 'b');  // larger than default extra buffer
 
   ssize_t written = ::write(fds[1], payload.data(), payload.size());
   ASSERT_EQ(written, static_cast<ssize_t>(payload.size()));

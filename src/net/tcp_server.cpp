@@ -77,10 +77,17 @@ void TcpServer::stop() {
   sub_loops_.clear();
   threads_.clear();
 
-  // At this point all connections have been destroyed because the
-  // EventLoops that owned them have stopped.
+  // Explicitly close connections still on the main loop (setThreadNum(0)
+  // case) to ensure they transition to kDisconnected before destruction.
+  // Sub-reactor connections are handled by their own event loops during
+  // the quit+join sequence above.
   {
     std::lock_guard<std::mutex> lock(connections_mutex_);
+    for (auto& kv : connections_) {
+      if (kv.second->getLoop() == main_loop_) {
+        kv.second->connectDestroyed();
+      }
+    }
     connections_.clear();
   }
 }
@@ -163,3 +170,6 @@ int TcpServer::connectionCount() const noexcept {
 }
 
 }  // namespace nexus::net
+
+
+
