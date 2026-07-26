@@ -1,0 +1,24 @@
+﻿syntax = "proto3";
+
+package nexus.examples.echo;
+
+/// Request payload for the echo service.
+message EchoRequest {
+  /// Arbitrary text to be echoed back.
+  string message = 1;
+}
+
+/// Response payload from the echo service.
+message EchoResponse {
+  /// The original message, echoed verbatim.
+  string message = 1;
+}
+
+/// Echo service that returns the request payload unchanged.
+///
+/// Primarily used as a benchmark and connectivity smoke-test target.
+/// The RPC method registered with the RpcServer SDK is "echo.Echo".
+service Echo {
+  /// Returns the request message unchanged.
+  rpc Echo(EchoRequest) returns (EchoResponse);
+}

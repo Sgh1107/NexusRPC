@@ -1,0 +1,33 @@
+﻿syntax = "proto3";
+
+package nexus.examples.weather;
+
+/// Request for current weather conditions in a city.
+message GetCurrentRequest {
+  /// City name (e.g. "Beijing", "London").
+  string city = 1;
+}
+
+/// Current weather snapshot returned for a city.
+message GetCurrentResponse {
+  /// City name as provided in the request.
+  string city = 1;
+
+  /// Temperature in degrees Celsius.
+  double temperature_celsius = 2;
+
+  /// Relative humidity as a percentage (0?100).
+  double humidity_percent = 3;
+
+  /// Human-readable weather condition (e.g. "Sunny", "Cloudy", "Rain").
+  string condition = 4;
+}
+
+/// Weather service providing current conditions and forecasts.
+///
+/// The RPC method name registered with the RpcServer SDK is formed as
+/// "weather.<MethodName>", e.g. "weather.GetCurrent".
+service Weather {
+  /// Returns the current weather for the requested city.
+  rpc GetCurrent(GetCurrentRequest) returns (GetCurrentResponse);
+}
