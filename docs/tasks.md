@@ -71,7 +71,7 @@
 
 
 
-### TASK-015 建立示例 Proto 和服务
+### TASK-015 建立示例 Proto 和服务 `[代码完成，测试通过]`
 
 - 目标：创建 `rpc.proto`、`options.proto`、`weather.proto`、Weather 和 Echo 服务。
 - 依赖：TASK-013、TASK-014。

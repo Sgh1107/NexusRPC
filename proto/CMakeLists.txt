@@ -1,7 +1,23 @@
 find_package(Protobuf REQUIRED)
 
-add_library(nexus_proto INTERFACE)
+# ---------------------------------------------------------------------------
+# Define the target first so protobuf_generate can attach sources to it
+# ---------------------------------------------------------------------------
+add_library(nexus_proto STATIC)
 add_library(NexusRPC::proto ALIAS nexus_proto)
-target_link_libraries(nexus_proto INTERFACE protobuf::libprotobuf)
 
-# Generated application .pb.cc files will be added to this target by TASK-015.
+# ---------------------------------------------------------------------------
+# Generate .pb.cc / .pb.h from protocol buffer definitions
+# ---------------------------------------------------------------------------
+protobuf_generate(
+    LANGUAGE cpp
+    TARGET nexus_proto
+    PROTOS examples/weather.proto examples/echo.proto
+    IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(nexus_proto PUBLIC protobuf::libprotobuf)
+target_include_directories(nexus_proto PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
