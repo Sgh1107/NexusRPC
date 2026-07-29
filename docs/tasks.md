@@ -81,7 +81,7 @@
 
 ## Phase 2：MCP stdio MVP
 
-### TASK-020 实现 JSON-RPC
+### TASK-020 实现 JSON-RPC `[代码完成，测试通过]`
 
 - 目标：解析请求、构造响应和错误，严格处理 Notification。
 - 依赖：TASK-002。
@@ -89,7 +89,7 @@
 - 测试：解析失败、批量数组、错误 id、无响应 Notification。
 - 风险：stdout 混入日志破坏 stdio 协议。
 
-### TASK-021 实现 Protobuf Tool Registry
+### TASK-021 实现 Protobuf Tool Registry `[代码完成，测试通过]`
 
 - 目标：从生成 Descriptor 和 options 生成 Tool 元数据。
 - 依赖：TASK-015、TASK-020。
@@ -97,7 +97,7 @@
 - 测试：基础类型、嵌套、map、repeated、Timestamp、wrapper。
 - 风险：oneof 和 Any 按决策降级，不可伪装成完整支持。
 
-### TASK-022 实现 stdio Gateway
+### TASK-022 实现 stdio Gateway `[代码完成，测试待完善，需补充单测]`
 
 - 目标：实现 tools/list、tools/call 和 RPC 路由。
 - 依赖：TASK-014、TASK-020、TASK-021。

@@ -1,0 +1,36 @@
+﻿/// @file options.proto
+/// @brief NexusRPC custom Protobuf options for MCP tool metadata (TASK-021).
+///
+/// These extensions annotate generated service and message descriptors with
+/// metadata that the Tool Registry uses to produce JSON Schema and MCP
+/// `tools/list` responses at runtime without loading .proto files.
+
+syntax = "proto3";
+
+package nexus.options;
+
+import "google/protobuf/descriptor.proto";
+
+// ---- Method-level options -------------------------------------------------
+
+extend google.protobuf.MethodOptions {
+  /// Human-readable description of the tool shown in MCP clients.
+  string tool_description = 60000;
+
+  /// When false the method is omitted from tools/list (default true).
+  bool tool_enabled = 60001;
+}
+
+// ---- Field-level options --------------------------------------------------
+
+extend google.protobuf.FieldOptions {
+  /// Human-readable description of the parameter shown in the JSON Schema.
+  string param_description = 60002;
+
+  /// Overrides the proto3 optional / required heuristic.  When true the
+  /// field is listed as required in the generated JSON Schema regardless
+  /// of its proto label.  When false (default) the registry uses proto3
+  /// semantics (all singular fields are optional unless marked required
+  /// via the option).
+  bool param_required = 60003;
+}

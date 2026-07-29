@@ -28,7 +28,7 @@ TEST(TcpServerTest, SetThreadNum) {
 
 TEST(TcpServerTest, SetCallbacks) {
   EventLoop loop;
-  TcpServer server(&loop, InetAddress(9602), "CallbackTest");
+  TcpServer server(&loop, InetAddress(9603), "CallbackTest");
 
   bool conn_called = false;
   server.setConnectionCallback(
