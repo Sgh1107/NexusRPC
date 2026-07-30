@@ -38,10 +38,10 @@ struct JsonRpcRequest {
   std::string method;
   JsonValue id;
   JsonValue params;
+  bool has_id = false;
 
-    /// A null identifier is a JSON-RPC notification.
-
-  bool isNotification() const noexcept { return id.is_null(); }
+  /// A JSON-RPC notification omits the id member entirely.
+  bool isNotification() const noexcept { return !has_id; }
 };
 
 /// JSON-RPC 2.0 response (success or error).
@@ -62,9 +62,17 @@ class JsonRpcParser {
  public:
   std::optional<JsonRpcRequest> parseRequest(std::string_view json_text);
   const std::string& lastError() const noexcept { return last_error_; }
+  int lastErrorCode() const noexcept { return last_error_code_; }
+  const JsonValue& lastErrorId() const noexcept { return last_error_id_; }
+  bool lastErrorIsNotification() const noexcept {
+    return last_error_is_notification_;
+  }
 
  private:
   std::string last_error_;
+  int last_error_code_ = ErrorCode::kParseError;
+  JsonValue last_error_id_;
+  bool last_error_is_notification_ = false;
 };
 
 /// Builds well-formed JSON-RPC 2.0 response text.

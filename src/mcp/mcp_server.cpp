@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <utility>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/dynamic_message.h>
@@ -55,17 +56,21 @@ void McpServer::run() {
   line.reserve(4096);
 
   while (!impl_->stopped && std::getline(std::cin, line)) {
-
     if (line.empty()) continue;
 
-        const auto parsed = impl_->parser.parseRequest(line);
+    const auto parsed = impl_->parser.parseRequest(line);
     if (!parsed.has_value()) {
-
       NEXUS_LOG_WARN("mcp parse error: {}", impl_->parser.lastError());
-            std::cout << JsonRpcSerializer::serializeParseError() << std::endl;
+      if (impl_->parser.lastErrorIsNotification()) {
+        continue;
+      }
+      std::cout << JsonRpcSerializer::serializeError(
+                       impl_->parser.lastErrorId(),
+                       impl_->parser.lastErrorCode(),
+                       impl_->parser.lastError())
+                << std::endl;
       continue;
     }
-
 
     const std::string response = dispatch(*parsed);
     if (!response.empty()) {
@@ -73,9 +78,8 @@ void McpServer::run() {
     }
   }
 
-      impl_->stopped = true;
+  impl_->stopped = true;
   NEXUS_LOG_INFO("mcp stdio server stopped");
-
 }
 
 void McpServer::stop() {
@@ -92,27 +96,35 @@ bool McpServer::isStopped() const noexcept { return impl_->stopped; }
 
 std::string McpServer::dispatch(const JsonRpcRequest& request) {
   const std::string& method = request.method;
+  const auto response_or_empty = [&request](std::string response) {
+    return request.isNotification() ? std::string() : std::move(response);
+  };
 
   // Lifecycle enforcement: every method except initialize and
   // notifications/initialized requires the server to be initialized.
   if (method != "initialize" && method != "notifications/initialized" &&
       impl_->session.state != McpSession::State::kInitialized) {
-    return JsonRpcSerializer::serializeError(
-        request.id, -32002, "Server not initialized");
+    return response_or_empty(JsonRpcSerializer::serializeError(
+        request.id, -32002, "Server not initialized"));
   }
 
-  if (method == "initialize") return handleInitialize(request);
+  if (method == "initialize") {
+    return response_or_empty(handleInitialize(request));
+  }
   if (method == "notifications/initialized") return handleInitialized(request);
-  if (method == "ping") return handlePing(request);
-  if (method == "tools/list") return handleToolsList(request);
-  if (method == "tools/call") return handleToolsCall(request);
+  if (method == "ping") return response_or_empty(handlePing(request));
+  if (method == "tools/list") {
+    return response_or_empty(handleToolsList(request));
+  }
+  if (method == "tools/call") {
+    return response_or_empty(handleToolsCall(request));
+  }
 
-        NEXUS_LOG_WARN("mcp unknown method={}", method);
+  NEXUS_LOG_WARN("mcp unknown method={}", method);
 
-    return JsonRpcSerializer::serializeError(
+  return response_or_empty(JsonRpcSerializer::serializeError(
       request.id, ErrorCode::kMethodNotFound,
-      "Unknown method: " + method);
-
+      "Unknown method: " + method));
 }
 
 // ============================================================================
