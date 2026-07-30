@@ -22,6 +22,7 @@
 #include "nexus/net/socket.h"
 #include "nexus/net/tcp_connection.h"
 #include "nexus/net/tcp_server.h"
+#include "nexus/observability/logging.h"
 #include "nexus/rpc/frame_codec.h"
 
 namespace nexus::rpc {
@@ -113,6 +114,7 @@ class RpcServer::Impl {
       return Status(StatusCode::kInternal, "service method is already registered");
     }
     handlers_.emplace(std::move(key), std::move(handler));
+    NEXUS_LOG_INFO("rpc handler registered service={} method={}", service, method);
     return Status::Ok();
   }
 
@@ -126,6 +128,7 @@ class RpcServer::Impl {
 
     stopping_ = false;
     startWorkers();
+    NEXUS_LOG_INFO("rpc server starting port={} workers={}", port, worker_thread_count_);
 
     std::promise<Status> startup_promise;
     std::future<Status> startup_future = startup_promise.get_future();
@@ -146,17 +149,20 @@ class RpcServer::Impl {
               onMessage(connection, buffer);
             });
         tcp_server_->start();
+        NEXUS_LOG_INFO("rpc server listening port={}", port);
         promise.set_value(Status::Ok());
         startup_reported = true;
         loop.loop();
         tcp_server_.reset();
         loop_ = nullptr;
       } catch (const std::exception& exception) {
+        NEXUS_LOG_ERROR("rpc server startup failed: {}", exception.what());
         loop_ = nullptr;
         if (!startup_reported) {
           promise.set_value(Status(StatusCode::kUnavailable, exception.what()));
         }
       } catch (...) {
+        NEXUS_LOG_ERROR("rpc server startup failed with an unknown exception");
         loop_ = nullptr;
         if (!startup_reported) {
           promise.set_value(Status(StatusCode::kInternal, "RPC server startup failed"));
@@ -181,6 +187,7 @@ class RpcServer::Impl {
     }
 
     stopping_ = true;
+    NEXUS_LOG_INFO("rpc server stopping");
     net::EventLoop* loop = loop_;
     if (loop != nullptr) {
       loop->queueInLoop([this]() {
@@ -197,6 +204,7 @@ class RpcServer::Impl {
 
     std::lock_guard<std::mutex> lock(connections_mutex_);
     connections_.clear();
+    NEXUS_LOG_INFO("rpc server stopped");
   }
 
   bool isRunning() const noexcept { return running_; }
@@ -245,8 +253,12 @@ class RpcServer::Impl {
     std::lock_guard<std::mutex> lock(connections_mutex_);
     if (connections_.find(connection.get()) == connections_.end()) {
       connections_.emplace(connection.get(), std::make_shared<ConnectionState>());
+      NEXUS_LOG_DEBUG("rpc connection opened connection={}",
+                      static_cast<const void*>(connection.get()));
     } else {
       connections_.erase(connection.get());
+      NEXUS_LOG_DEBUG("rpc connection closed connection={}",
+                      static_cast<const void*>(connection.get()));
     }
   }
 
@@ -268,6 +280,9 @@ class RpcServer::Impl {
     buffer->retrieve(readable_bytes);
 
     if (feed_result != ParseResult::kOk && feed_result != ParseResult::kNeedMoreData) {
+      NEXUS_LOG_WARN("rpc frame parse failed connection={} result={}",
+                     static_cast<const void*>(connection.get()),
+                     static_cast<int>(feed_result));
       connection->forceClose();
       return;
     }
@@ -275,6 +290,7 @@ class RpcServer::Impl {
     while (state->parser.isComplete()) {
       const RpcFrameHeader header = state->parser.header();
       if (header.msg_type != static_cast<std::uint8_t>(MessageType::kRequest)) {
+        NEXUS_LOG_WARN("rpc received non-request frame request_id={}", header.request_id);
         connection->forceClose();
         return;
       }
@@ -361,14 +377,23 @@ class RpcServer::Impl {
       if (!deadline_status.ok()) {
         response.status = deadline_status;
       } else if (!handler) {
+        NEXUS_LOG_WARN("rpc handler not found request_id={} service={} method={}",
+                       pending.request.request_id, pending.request.service,
+                       pending.request.method);
         response.status = Status(StatusCode::kNotFound, "service method is not registered");
       } else {
         try {
           response = handler(pending.request);
         } catch (const std::exception& exception) {
+          NEXUS_LOG_ERROR("rpc handler exception request_id={} service={} method={}: {}",
+                          pending.request.request_id, pending.request.service,
+                          pending.request.method, exception.what());
           response.status = Status(StatusCode::kInternal, exception.what());
           response.body.clear();
         } catch (...) {
+          NEXUS_LOG_ERROR("rpc handler unknown exception request_id={} service={} method={}",
+                          pending.request.request_id, pending.request.service,
+                          pending.request.method);
           response.status = Status(StatusCode::kInternal, "unclassified handler exception");
           response.body.clear();
         }

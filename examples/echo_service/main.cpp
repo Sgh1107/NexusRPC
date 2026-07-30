@@ -8,12 +8,13 @@
 #include <atomic>
 #include <csignal>
 #include <cstdlib>
-#include <iostream>
 #include <thread>
 
 #include "examples/echo.pb.h"
+#include "nexus/observability/logging.h"
 #include "nexus/rpc/rpc_server.h"
 #include "nexus/rpc/status.h"
+
 
 namespace {
 
@@ -29,9 +30,11 @@ void installSignalHandlers() {
 }  // namespace
 
 int main() {
+  nexus::observability::Logging::initialize();
   installSignalHandlers();
 
   nexus::rpc::RpcServer server(/*worker_thread_count=*/4);
+
 
   // -----------------------------------------------------------------------
   // Register the typed Echo handler
@@ -46,23 +49,30 @@ int main() {
         return nexus::rpc::Status::Ok();
       });
 
-  if (!register_status.ok()) {
-    std::cerr << "Failed to register handler: " << register_status.message() << std::endl;
+      if (!register_status.ok()) {
+    NEXUS_LOG_ERROR("echo handler registration failed: {}",
+                    register_status.message());
+    nexus::observability::Logging::shutdown();
     return EXIT_FAILURE;
   }
+
 
   // -----------------------------------------------------------------------
   // Start listening
   // -----------------------------------------------------------------------
   constexpr std::uint16_t kEchoPort = 9602;
   const auto start_status = server.start(kEchoPort);
-  if (!start_status.ok()) {
-    std::cerr << "Failed to start Echo server on port " << kEchoPort
-              << ": " << start_status.message() << std::endl;
+      if (!start_status.ok()) {
+    NEXUS_LOG_ERROR("echo server startup failed port={} message={}",
+                    kEchoPort, start_status.message());
+    nexus::observability::Logging::shutdown();
     return EXIT_FAILURE;
   }
 
-  std::cout << "Echo service listening on 0.0.0.0:" << kEchoPort << std::endl;
+  NEXUS_LOG_INFO("echo service listening address=0.0.0.0 port={}",
+                 kEchoPort);
+
+
 
   // -----------------------------------------------------------------------
   // Wait for shutdown signal
@@ -71,8 +81,11 @@ int main() {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  std::cout << "Shutting down Echo service..." << std::endl;
+    NEXUS_LOG_INFO("echo service stopping");
+
   server.stop();
-  std::cout << "Echo service stopped." << std::endl;
+  NEXUS_LOG_INFO("echo service stopped");
+  nexus::observability::Logging::shutdown();
+
   return EXIT_SUCCESS;
 }

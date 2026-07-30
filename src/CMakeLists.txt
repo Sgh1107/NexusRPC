@@ -23,6 +23,16 @@ endif()
 
 add_library(NexusRPC::net ALIAS nexus_net)
 
+# ---- nexus_observability --------------------------------------------------
+add_library(nexus_observability STATIC
+    observability/logging.cpp
+)
+target_link_libraries(nexus_observability PUBLIC spdlog::spdlog)
+target_include_directories(nexus_observability PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+)
+add_library(NexusRPC::observability ALIAS nexus_observability)
+
 # ---- nexus_rpc ------------------------------------------------------------
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_library(nexus_rpc STATIC
@@ -30,13 +40,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         rpc/rpc_client.cpp
         rpc/rpc_server.cpp
     )
-    target_link_libraries(nexus_rpc PUBLIC nexus_net nexus_proto)
+    target_link_libraries(nexus_rpc PUBLIC
+        nexus_net
+        nexus_observability
+        nexus_proto
+    )
     target_include_directories(nexus_rpc PUBLIC
         ${PROJECT_SOURCE_DIR}/include
     )
 else()
     add_library(nexus_rpc INTERFACE)
-    target_link_libraries(nexus_rpc INTERFACE nexus_net nexus_proto)
+    target_link_libraries(nexus_rpc INTERFACE
+        nexus_net
+        nexus_observability
+        nexus_proto
+    )
     target_include_directories(nexus_rpc INTERFACE
         ${PROJECT_SOURCE_DIR}/include
     )
@@ -54,12 +72,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(nexus_mcp PUBLIC nexus_rpc)
     target_include_directories(nexus_mcp PUBLIC
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/src
     )
 else()
     add_library(nexus_mcp INTERFACE)
     target_link_libraries(nexus_mcp INTERFACE nexus_rpc)
     target_include_directories(nexus_mcp INTERFACE
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/src
     )
 endif()
 
@@ -72,8 +92,7 @@ target_include_directories(nexus_registry INTERFACE
     ${PROJECT_SOURCE_DIR}/include
 )
 
-add_library(nexus_observability INTERFACE)
-add_library(NexusRPC::observability ALIAS nexus_observability)
-target_include_directories(nexus_observability INTERFACE
-    ${PROJECT_SOURCE_DIR}/include
-)
+
+
+
+

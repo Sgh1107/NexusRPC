@@ -10,11 +10,13 @@
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>
 
+#include "nexus/observability/logging.h"
 #include "nexus/rpc/status.h"
 
 namespace nexus::mcp {
 
 // ============================================================================
+
 // Impl
 // ============================================================================
 
@@ -48,19 +50,22 @@ McpServer::~McpServer() = default;
 // ============================================================================
 
 void McpServer::run() {
+  NEXUS_LOG_INFO("mcp stdio server started");
   std::string line;
   line.reserve(4096);
 
   while (!impl_->stopped && std::getline(std::cin, line)) {
+
     if (line.empty()) continue;
 
-    const auto parsed = impl_->parser.parseRequest(line);
+        const auto parsed = impl_->parser.parseRequest(line);
     if (!parsed.has_value()) {
-      std::cerr << "[mcp] parse error: " << impl_->parser.lastError()
-                << std::endl;
-      std::cout << JsonRpcSerializer::serializeParseError() << std::endl;
+
+      NEXUS_LOG_WARN("mcp parse error: {}", impl_->parser.lastError());
+            std::cout << JsonRpcSerializer::serializeParseError() << std::endl;
       continue;
     }
+
 
     const std::string response = dispatch(*parsed);
     if (!response.empty()) {
@@ -68,14 +73,20 @@ void McpServer::run() {
     }
   }
 
-  impl_->stopped = true;
+      impl_->stopped = true;
+  NEXUS_LOG_INFO("mcp stdio server stopped");
+
 }
 
-void McpServer::stop() { impl_->stopped = true; }
+void McpServer::stop() {
+  NEXUS_LOG_INFO("mcp stdio server stopping");
+  impl_->stopped = true;
+}
 
 bool McpServer::isStopped() const noexcept { return impl_->stopped; }
 
 // ============================================================================
+
 // dispatch
 // ============================================================================
 
@@ -96,10 +107,12 @@ std::string McpServer::dispatch(const JsonRpcRequest& request) {
   if (method == "tools/list") return handleToolsList(request);
   if (method == "tools/call") return handleToolsCall(request);
 
-  std::cerr << "[mcp] unknown method: " << method << std::endl;
-  return JsonRpcSerializer::serializeError(
+        NEXUS_LOG_WARN("mcp unknown method={}", method);
+
+    return JsonRpcSerializer::serializeError(
       request.id, ErrorCode::kMethodNotFound,
       "Unknown method: " + method);
+
 }
 
 // ============================================================================
@@ -115,86 +128,100 @@ std::string McpServer::handleInitialize(const JsonRpcRequest& request) {
 
   impl_->session.state = McpSession::State::kInitialized;
 
-  auto capabilities = JsonValue::MakeObject();
-  auto tools_cap = JsonValue::MakeObject();
-  tools_cap.set("listChanged", JsonValue(false));
-  capabilities.set("tools", std::move(tools_cap));
+    JsonValue capabilities = JsonValue::object();
 
-  auto result = JsonValue::MakeObject();
-  result.set("protocolVersion", JsonValue("2024-11-05"));
-  result.set("serverInfo",
-             JsonValue::MakeObject()
-                 .set("name", JsonValue(impl_->server_name))
-                 .set("version", JsonValue(impl_->server_version)));
-  result.set("capabilities", std::move(capabilities));
+  JsonValue tools_cap = JsonValue::object();
+
+  tools_cap["listChanged"] = false;
+  capabilities["tools"] = std::move(tools_cap);
+
+  JsonValue result = JsonValue::object();
+  result["protocolVersion"] = "2024-11-05";
+  JsonValue server_info = JsonValue::object();
+  server_info["name"] = impl_->server_name;
+  server_info["version"] = impl_->server_version;
+  result["serverInfo"] = std::move(server_info);
+  result["capabilities"] = std::move(capabilities);
 
   return JsonRpcSerializer::serializeResponse(request.id, std::move(result));
 }
+
 
 // ============================================================================
 // handleInitialized
 // ============================================================================
 
 std::string McpServer::handleInitialized(const JsonRpcRequest& /*request*/) {
-  std::cerr << "[mcp] client sent initialized notification" << std::endl;
+  NEXUS_LOG_DEBUG("mcp initialized notification received");
   return {};  // Notification: no response.
 }
+
 
 // ============================================================================
 // handlePing
 // ============================================================================
 
 std::string McpServer::handlePing(const JsonRpcRequest& request) {
-  return JsonRpcSerializer::serializeResponse(request.id,
-                                               JsonValue::MakeObject());
+  return JsonRpcSerializer::serializeResponse(request.id, JsonValue::object());
 }
 
 // ============================================================================
 // handleToolsList
+
 // ============================================================================
 
 std::string McpServer::handleToolsList(const JsonRpcRequest& request) {
   const auto tools = impl_->registry->listTools();
 
-  auto tools_array = JsonValue::MakeArray();
+    JsonValue tools_array = JsonValue::array();
+
   for (const auto& desc : tools) {
-    tools_array.push(buildToolSchema(desc));
+
+    tools_array.push_back(buildToolSchema(desc));
   }
 
-  auto result = JsonValue::MakeObject();
-  result.set("tools", std::move(tools_array));
+  JsonValue result = JsonValue::object();
+  result["tools"] = std::move(tools_array);
 
   return JsonRpcSerializer::serializeResponse(request.id, std::move(result));
 }
+
 
 // ============================================================================
 // handleToolsCall
 // ============================================================================
 
 std::string McpServer::handleToolsCall(const JsonRpcRequest& request) {
-  if (!request.params.isObject() || !request.params.hasMember("name")) {
+  if (!request.params.is_object() || !request.params.contains("name") ||
+      !request.params["name"].is_string()) {
+
+
     return JsonRpcSerializer::serializeError(
         request.id, ErrorCode::kInvalidParams,
         "params must include 'name'");
   }
 
-  const std::string tool_name = request.params["name"].toString();
+    const std::string tool_name = request.params["name"].get<std::string>();
+
   const ToolDescriptor* tool = impl_->registry->findTool(tool_name);
+
   if (tool == nullptr) {
+    NEXUS_LOG_WARN("mcp tool not found tool={}", tool_name);
     return JsonRpcSerializer::serializeError(
+
         request.id, ErrorCode::kMethodNotFound,
         "Tool not found: " + tool_name);
   }
 
-  JsonValue arguments;
-  if (request.params.hasMember("arguments") &&
-      request.params["arguments"].isObject()) {
+    JsonValue arguments = JsonValue::object();
+
+  if (request.params.contains("arguments") &&
+      request.params["arguments"].is_object()) {
     arguments = request.params["arguments"];
-  } else {
-    arguments = JsonValue::MakeObject();
   }
 
-  // Convert JSON arguments ¡ú Protobuf.
+  // Convert JSON arguments to Protobuf.
+
   auto proto_body = jsonToProtobuf(arguments, tool->request_descriptor);
   if (!proto_body.ok()) {
     return JsonRpcSerializer::serializeError(
@@ -203,10 +230,16 @@ std::string McpServer::handleToolsCall(const JsonRpcRequest& request) {
   }
 
   // Call the RPC backend.
-  auto rpc_result = impl_->rpc_client->call(
+    auto rpc_result = impl_->rpc_client->call(
+
       tool->service_name, tool->method_name, proto_body.value());
   if (!rpc_result.ok()) {
+    NEXUS_LOG_WARN("mcp rpc call failed tool={} status={} message={}", tool_name,
+                   static_cast<int>(rpc_result.status().code()),
+                   rpc_result.status().message());
+
     int mcp_code = ErrorCode::kInternalError;
+
     switch (rpc_result.status().code()) {
       case rpc::StatusCode::kNotFound:
         mcp_code = ErrorCode::kMethodNotFound;
@@ -239,7 +272,8 @@ std::string McpServer::handleToolsCall(const JsonRpcRequest& request) {
         request.id, ErrorCode::kInternalError, detail);
   }
 
-  // Convert Protobuf response ¡ú JSON.
+    // Convert Protobuf response to JSON.
+
   auto json_result =
       protobufToJson(rpc_result.value().body, tool->response_descriptor);
   if (!json_result.ok()) {
@@ -249,82 +283,93 @@ std::string McpServer::handleToolsCall(const JsonRpcRequest& request) {
   }
 
   // Build MCP result: content[0].text + structuredContent.
-  auto content = JsonValue::MakeArray();
-  auto text_item = JsonValue::MakeObject();
-  text_item.set("type", JsonValue("text"));
-  text_item.set("text", JsonValue(json_result.value().serialize()));
-  content.push(std::move(text_item));
+    JsonValue content = JsonValue::array();
 
-  auto result = JsonValue::MakeObject();
-  result.set("content", std::move(content));
-  result.set("structuredContent", std::move(json_result).value());
+  JsonValue text_item = JsonValue::object();
+  text_item["type"] = "text";
+  text_item["text"] = json_result.value().dump();
+  content.push_back(std::move(text_item));
+
+  JsonValue result = JsonValue::object();
+  result["content"] = std::move(content);
+  result["structuredContent"] = std::move(json_result).value();
 
   return JsonRpcSerializer::serializeResponse(request.id, std::move(result));
 }
+
 
 // ============================================================================
 // buildToolSchema / buildPropertySchema
 // ============================================================================
 
 JsonValue McpServer::buildToolSchema(const ToolDescriptor& desc) {
-  auto tool = JsonValue::MakeObject();
-  tool.set("name", JsonValue(desc.name));
-  tool.set("description", JsonValue(desc.description));
+  JsonValue tool = JsonValue::object();
+  tool["name"] = desc.name;
+  tool["description"] = desc.description;
 
-  auto schema = JsonValue::MakeObject();
-  schema.set("type", JsonValue("object"));
+  JsonValue schema = JsonValue::object();
+  schema["type"] = "object";
 
-  auto properties = JsonValue::MakeObject();
-  auto required_arr = JsonValue::MakeArray();
+  JsonValue properties = JsonValue::object();
+  JsonValue required = JsonValue::array();
   for (const auto& param : desc.input_schema) {
-    properties.set(param.name, buildPropertySchema(param));
+    properties[param.name] = buildPropertySchema(param);
     if (param.required) {
-      required_arr.push(JsonValue(param.name));
+      required.push_back(param.name);
     }
   }
-  schema.set("properties", std::move(properties));
-  if (required_arr.size() > 0) {
-    schema.set("required", std::move(required_arr));
+  schema["properties"] = std::move(properties);
+  if (!required.empty()) {
+    schema["required"] = std::move(required);
   }
 
-  tool.set("inputSchema", std::move(schema));
+  tool["inputSchema"] = std::move(schema);
   return tool;
 }
 
 JsonValue McpServer::buildPropertySchema(const ToolParameter& param) {
-  auto prop = JsonValue::MakeObject();
-  prop.set("type", JsonValue(param.type));
-  if (!param.description.empty())
-    prop.set("description", JsonValue(param.description));
-  if (!param.content_encoding.empty())
-    prop.set("contentEncoding", JsonValue(param.content_encoding));
+  JsonValue property = JsonValue::object();
+  property["type"] = param.type;
+  if (!param.description.empty()) {
+    property["description"] = param.description;
+  }
+  if (!param.content_encoding.empty()) {
+    property["contentEncoding"] = param.content_encoding;
+  }
 
   if (param.enum_values.has_value()) {
-    auto arr = JsonValue::MakeArray();
-    for (const auto& v : *param.enum_values) arr.push(JsonValue(v));
-    prop.set("enum", std::move(arr));
+    JsonValue values = JsonValue::array();
+    for (const auto& value : *param.enum_values) {
+      values.push_back(value);
+    }
+    property["enum"] = std::move(values);
   }
 
   if (!param.properties.empty()) {
-    auto nested_props = JsonValue::MakeObject();
-    auto nested_req = JsonValue::MakeArray();
-    for (const auto& p : param.properties) {
-      nested_props.set(p.name, buildPropertySchema(p));
-      if (p.required) nested_req.push(JsonValue(p.name));
+    JsonValue nested_properties = JsonValue::object();
+    JsonValue nested_required = JsonValue::array();
+    for (const auto& nested : param.properties) {
+      nested_properties[nested.name] = buildPropertySchema(nested);
+      if (nested.required) {
+        nested_required.push_back(nested.name);
+      }
     }
-    prop.set("properties", std::move(nested_props));
-    if (nested_req.size() > 0) prop.set("required", std::move(nested_req));
+    property["properties"] = std::move(nested_properties);
+    if (!nested_required.empty()) {
+      property["required"] = std::move(nested_required);
+    }
   }
 
   if (param.items != nullptr) {
-    prop.set("items", buildPropertySchema(*param.items));
+    property["items"] = buildPropertySchema(*param.items);
   }
 
-  return prop;
+  return property;
 }
 
 // ============================================================================
-// JSON ? Protobuf
+// JSON to Protobuf
+
 // ============================================================================
 
 rpc::Result<std::string> McpServer::jsonToProtobuf(
@@ -342,7 +387,9 @@ rpc::Result<std::string> McpServer::jsonToProtobuf(
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = false;
 
-  const std::string json_text = json.serialize();
+    const std::string json_text = json.dump();
+
+
   const auto status = google::protobuf::util::JsonStringToMessage(
       json_text, message.get(), options);
   if (!status.ok()) {
@@ -387,17 +434,15 @@ rpc::Result<JsonValue> McpServer::protobufToJson(
     return rpc::Status(rpc::StatusCode::kInternal, status.ToString());
   }
 
-  // Parse the JSON text back into our JsonValue DOM.
-  // We embed it inside a wrapper object to leverage the existing parser.
-  std::string wrapper = R"({"jsonrpc":"2.0","method":"_","id":1,"params":)" +
-                        json_text + "}";
-  const auto parsed = impl_->parser.parseRequest(wrapper);
-  if (!parsed.has_value() || !parsed->params.isObject()) {
+    JsonValue json = JsonValue::parse(json_text, nullptr, false);
+
+  if (json.is_discarded()) {
     return rpc::Status(rpc::StatusCode::kInternal,
                        "failed to parse JSON response from Protobuf");
   }
-  return parsed->params;
+  return json;
 }
+
 
 }  // namespace nexus::mcp
 

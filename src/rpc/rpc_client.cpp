@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "nexus/observability/logging.h"
 #include "nexus/rpc/frame_codec.h"
 
 namespace nexus::rpc {
@@ -183,6 +184,9 @@ class RpcClient::Impl {
     const auto deadline = std::chrono::steady_clock::now() + options.deadline;
     Status status = ensureConnected(deadline);
     if (!status.ok()) {
+      NEXUS_LOG_WARN("rpc connection failed endpoint={}:{} status={} message={}",
+                     endpoint_.host, endpoint_.port,
+                     static_cast<int>(status.code()), status.message());
       closeUnlocked();
       return status;
     }
@@ -194,6 +198,8 @@ class RpcClient::Impl {
         std::chrono::system_clock::now().time_since_epoch() + options.deadline);
     metadata[kDeadlineMetadataKey] = std::to_string(deadline_unix_ms.count());
     if (!isFrameEncodable(metadata, body)) {
+      NEXUS_LOG_WARN("rpc request exceeds frame limit service={} method={} body_bytes={}",
+                     service, method, body.size());
       return Status(StatusCode::kResourceExhausted, "request frame exceeds protocol limits");
     }
 
@@ -202,6 +208,8 @@ class RpcClient::Impl {
         encodeFrame(request_id, MessageType::kRequest, metadata, body);
     status = writeAll(fd_, frame.data(), frame.size(), deadline);
     if (!status.ok()) {
+      NEXUS_LOG_WARN("rpc request write failed request_id={} service={} method={} message={}",
+                     request_id, service, method, status.message());
       closeUnlocked();
       return status;
     }

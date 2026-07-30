@@ -83,7 +83,18 @@ target_link_libraries(json_rpc_test
 target_include_directories(json_rpc_test PRIVATE ${PROJECT_SOURCE_DIR})
 gtest_discover_tests(json_rpc_test)
 
+# ---- Observability logging unit tests -------------------------------------
+add_executable(logging_test logging_test.cpp)
+target_link_libraries(logging_test
+  PRIVATE
+    nexus_observability
+    GTest::gtest_main
+)
+target_include_directories(logging_test PRIVATE ${PROJECT_SOURCE_DIR})
+gtest_discover_tests(logging_test)
+
 # ---- Tool Registry unit tests (TASK-021) ----------------------------------
+
 add_executable(tool_registry_test tool_registry_test.cpp)
 target_link_libraries(tool_registry_test
   PRIVATE

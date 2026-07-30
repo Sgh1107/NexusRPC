@@ -8,13 +8,14 @@
 #include <atomic>
 #include <csignal>
 #include <cstdlib>
-#include <iostream>
 #include <string>
 #include <thread>
 
 #include "examples/weather.pb.h"
+#include "nexus/observability/logging.h"
 #include "nexus/rpc/rpc_server.h"
 #include "nexus/rpc/status.h"
+
 
 namespace {
 
@@ -31,9 +32,11 @@ void installSignalHandlers() {
 }  // namespace
 
 int main() {
+  nexus::observability::Logging::initialize();
   installSignalHandlers();
 
   nexus::rpc::RpcServer server(/*worker_thread_count=*/4);
+
 
   // -----------------------------------------------------------------------
   // Register typed handlers (Protobuf request / response)
@@ -71,23 +74,30 @@ int main() {
         return nexus::rpc::Status::Ok();
       });
 
-  if (!register_status.ok()) {
-    std::cerr << "Failed to register handler: " << register_status.message() << std::endl;
+      if (!register_status.ok()) {
+    NEXUS_LOG_ERROR("weather handler registration failed: {}",
+                    register_status.message());
+    nexus::observability::Logging::shutdown();
     return EXIT_FAILURE;
   }
+
 
   // -----------------------------------------------------------------------
   // Start listening
   // -----------------------------------------------------------------------
   constexpr std::uint16_t kWeatherPort = 9601;
   const auto start_status = server.start(kWeatherPort);
-  if (!start_status.ok()) {
-    std::cerr << "Failed to start Weather server on port " << kWeatherPort
-              << ": " << start_status.message() << std::endl;
+      if (!start_status.ok()) {
+    NEXUS_LOG_ERROR("weather server startup failed port={} message={}",
+                    kWeatherPort, start_status.message());
+    nexus::observability::Logging::shutdown();
     return EXIT_FAILURE;
   }
 
-  std::cout << "Weather service listening on 0.0.0.0:" << kWeatherPort << std::endl;
+  NEXUS_LOG_INFO("weather service listening address=0.0.0.0 port={}",
+                 kWeatherPort);
+
+
 
   // -----------------------------------------------------------------------
   // Wait for shutdown signal
@@ -96,8 +106,11 @@ int main() {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  std::cout << "Shutting down Weather service..." << std::endl;
+    NEXUS_LOG_INFO("weather service stopping");
+
   server.stop();
-  std::cout << "Weather service stopped." << std::endl;
+  NEXUS_LOG_INFO("weather service stopped");
+  nexus::observability::Logging::shutdown();
+
   return EXIT_SUCCESS;
 }
