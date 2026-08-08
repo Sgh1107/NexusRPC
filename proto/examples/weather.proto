@@ -2,10 +2,16 @@
 
 package nexus.examples.weather;
 
+import "nexus/options.proto";
+
 /// Request for current weather conditions in a city.
 message GetCurrentRequest {
   /// City name (e.g. "Beijing", "London").
-  string city = 1;
+  string city = 1 [
+    (nexus.options.param_description) =
+        "City name (e.g. \"Beijing\", \"London\", \"Tokyo\")",
+    (nexus.options.param_required) = true
+  ];
 }
 
 /// Current weather snapshot returned for a city.
@@ -29,5 +35,8 @@ message GetCurrentResponse {
 /// "weather.<MethodName>", e.g. "weather.GetCurrent".
 service Weather {
   /// Returns the current weather for the requested city.
-  rpc GetCurrent(GetCurrentRequest) returns (GetCurrentResponse);
+  rpc GetCurrent(GetCurrentRequest) returns (GetCurrentResponse) {
+    option (nexus.options.tool_description) =
+        "Returns the current weather for the requested city.";
+  }
 }

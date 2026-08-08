@@ -7,6 +7,9 @@
 # Generated files
 /proto/generated/
 
+# CodeGraph index
+/.codegraph/
+
 # IDE files
 .vscode/
 .idea/

@@ -1,0 +1,64 @@
+/// @file schema_test.proto
+/// @brief Test-only messages exercising Tool Registry schema conversion
+///        (TASK-021): base types, bytes, enum, nested message, repeated,
+///        map, proto3 optional, Timestamp, Duration and wrapper types.
+
+syntax = "proto3";
+
+package nexus.mcp.test;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "nexus/options.proto";
+
+enum Color {
+  COLOR_UNSPECIFIED = 0;
+  RED = 1;
+  GREEN = 2;
+}
+
+message NestedMessage {
+  string key = 1;
+}
+
+message RunRequest {
+  string name = 1 [
+    (nexus.options.param_description) = "Unique tool name.",
+    (nexus.options.param_required) = true
+  ];
+  int32 count = 2;
+  double ratio = 3;
+  bool enabled = 4;
+  bytes payload = 5;
+  Color color = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Duration ttl = 8;
+  google.protobuf.StringValue nickname = 9;
+  NestedMessage nested = 10;
+  repeated string tags = 11;
+  map<string, int64> scores = 12;
+  optional string note = 13;
+  repeated google.protobuf.Timestamp events = 14;
+  repeated NestedMessage children = 15;
+}
+
+message RunResponse {
+  string echo = 1;
+}
+
+message HiddenRequest {
+  string secret = 1;
+}
+
+message HiddenResponse {}
+
+service SchemaTestService {
+  rpc Run(RunRequest) returns (RunResponse) {
+    option (nexus.options.tool_description) = "Runs the schema test.";
+  }
+
+  rpc Hidden(HiddenRequest) returns (HiddenResponse) {
+    option (nexus.options.tool_enabled) = false;
+  }
+}
