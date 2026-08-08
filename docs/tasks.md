@@ -81,28 +81,28 @@
 
 ## Phase 2：MCP stdio MVP
 
-### TASK-020 实现 JSON-RPC
+### TASK-020 实现 JSON-RPC `[代码完成，单测通过]`
 
 - 目标：解析请求、构造响应和错误，严格处理 Notification。
 - 依赖：TASK-002。
 - 验收：支持 `initialize`、`initialized`、`ping`、错误码。
-- 测试：解析失败、批量数组、错误 id、无响应 Notification。
+- 测试：JsonValue 序列化、解析失败、批量数组拒绝、错误 id、Notification 无响应（含无 id 形式）、错误码序列化；编译机单测通过。
 - 风险：stdout 混入日志破坏 stdio 协议。
 
-### TASK-021 实现 Protobuf Tool Registry
+### TASK-021 实现 Protobuf Tool Registry `[代码完成，单测通过]`
 
 - 目标：从生成 Descriptor 和 options 生成 Tool 元数据。
 - 依赖：TASK-015、TASK-020。
 - 验收：生成 `weather.get_current`，Schema 使用 json_name，必填来源正确。
-- 测试：基础类型、嵌套、map、repeated、Timestamp、wrapper。
+- 测试：descriptor 驱动注册（weather.get_current、echo.echo）、options 描述/必填来源、json_name、基础类型、嵌套、map、repeated（含 Timestamp/嵌套消息 items）、Timestamp、Duration、wrapper、enum、bytes、proto3 optional、tool_enabled=false；编译机单测通过。
 - 风险：oneof 和 Any 按决策降级，不可伪装成完整支持。
 
-### TASK-022 实现 stdio Gateway
+### TASK-022 实现 stdio Gateway `[代码完成，单测通过；示例与 Inspector 验证待执行]`
 
 - 目标：实现 tools/list、tools/call 和 RPC 路由。
 - 依赖：TASK-014、TASK-020、TASK-021。
 - 验收：MCP Inspector 完成 Weather 调用，返回 text 和 structuredContent。
-- 测试：端到端和 stderr 日志隔离。
+- 测试：mcp_server_test（initialize 生命周期、未初始化拒绝、ping、tools/list schema、tools/call 真实 TCP 闭环、参数/工具不存在错误、stdout/stderr 隔离）编译机单测通过；mcp_gateway 示例、MCP Inspector 端到端验证与 ASan 待执行。
 - 风险：MCP request ID 与 RPC request ID 映射错误。
 
 ## Phase 3：v1.1 Registry 与治理

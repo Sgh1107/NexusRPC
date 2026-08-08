@@ -25,7 +25,7 @@ add_library(NexusRPC::net ALIAS nexus_net)
 
 # ---- nexus_rpc ------------------------------------------------------------
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        add_library(nexus_rpc STATIC
+    add_library(nexus_rpc STATIC
         rpc/frame_codec.cpp
         rpc/rpc_client.cpp
         rpc/rpc_server.cpp
@@ -34,11 +34,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_include_directories(nexus_rpc PUBLIC
         ${PROJECT_SOURCE_DIR}/include
     )
-
 else()
     add_library(nexus_rpc INTERFACE)
-        target_link_libraries(nexus_rpc INTERFACE nexus_net nexus_proto)
-
+    target_link_libraries(nexus_rpc INTERFACE nexus_net nexus_proto)
     target_include_directories(nexus_rpc INTERFACE
         ${PROJECT_SOURCE_DIR}/include
     )
@@ -46,12 +44,26 @@ endif()
 
 add_library(NexusRPC::rpc ALIAS nexus_rpc)
 
-add_library(nexus_mcp INTERFACE)
+# ---- nexus_mcp ------------------------------------------------------------
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_library(nexus_mcp STATIC
+        mcp/json_rpc.cpp
+        mcp/tool_registry.cpp
+        mcp/mcp_server.cpp
+    )
+    target_link_libraries(nexus_mcp PUBLIC nexus_rpc)
+    target_include_directories(nexus_mcp PUBLIC
+        ${PROJECT_SOURCE_DIR}/include
+    )
+else()
+    add_library(nexus_mcp INTERFACE)
+    target_link_libraries(nexus_mcp INTERFACE nexus_rpc)
+    target_include_directories(nexus_mcp INTERFACE
+        ${PROJECT_SOURCE_DIR}/include
+    )
+endif()
+
 add_library(NexusRPC::mcp ALIAS nexus_mcp)
-target_link_libraries(nexus_mcp INTERFACE nexus_rpc)
-target_include_directories(nexus_mcp INTERFACE
-    ${PROJECT_SOURCE_DIR}/include
-)
 
 add_library(nexus_registry INTERFACE)
 add_library(NexusRPC::registry ALIAS nexus_registry)

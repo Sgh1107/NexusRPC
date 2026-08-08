@@ -2,10 +2,15 @@
 
 package nexus.examples.echo;
 
+import "nexus/options.proto";
+
 /// Request payload for the echo service.
 message EchoRequest {
   /// Arbitrary text to be echoed back.
-  string message = 1;
+  string message = 1 [
+    (nexus.options.param_description) = "Arbitrary text to be echoed back.",
+    (nexus.options.param_required) = true
+  ];
 }
 
 /// Response payload from the echo service.
@@ -20,5 +25,8 @@ message EchoResponse {
 /// The RPC method registered with the RpcServer SDK is "echo.Echo".
 service Echo {
   /// Returns the request message unchanged.
-  rpc Echo(EchoRequest) returns (EchoResponse);
+  rpc Echo(EchoRequest) returns (EchoResponse) {
+    option (nexus.options.tool_description) =
+        "Echoes the request payload unchanged.";
+  }
 }

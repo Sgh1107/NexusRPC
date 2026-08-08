@@ -1,13 +1,7 @@
 include(FetchContent)
 
-# FetchContent_Declare(
-#   googletest
-#   GIT_REPOSITORY https://github.com/google/googletest.git
-#   GIT_TAG        v1.14.0
-# )
-# FetchContent_MakeAvailable(googletest)
-
 find_package(GTest REQUIRED)
+find_package(Protobuf REQUIRED)
 include(GoogleTest)
 
 # ---- Buffer unit tests ----------------------------------------------------
@@ -70,7 +64,7 @@ target_link_libraries(frame_codec_test
 target_include_directories(frame_codec_test PRIVATE ${PROJECT_SOURCE_DIR})
 gtest_discover_tests(frame_codec_test)
 
-# ---- RPC Server / Client SDK loopback tests (TASK-013, TASK-014) ---------
+# ---- RPC Server / Client SDK loopback tests (TASK-013, TASK-014) ----------
 add_executable(rpc_sdk_test rpc_sdk_test.cpp)
 target_link_libraries(rpc_sdk_test
   PRIVATE
@@ -80,4 +74,49 @@ target_link_libraries(rpc_sdk_test
 target_include_directories(rpc_sdk_test PRIVATE ${PROJECT_SOURCE_DIR})
 gtest_discover_tests(rpc_sdk_test)
 
+# ---- JSON-RPC unit tests (TASK-020) ---------------------------------------
+add_executable(json_rpc_test json_rpc_test.cpp)
+target_link_libraries(json_rpc_test
+  PRIVATE
+    nexus_mcp
+    GTest::gtest_main
+)
+target_include_directories(json_rpc_test PRIVATE ${PROJECT_SOURCE_DIR})
+gtest_discover_tests(json_rpc_test)
+
+# ---- Tool Registry unit tests (TASK-021) ----------------------------------
+add_executable(tool_registry_test tool_registry_test.cpp)
+target_link_libraries(tool_registry_test
+  PRIVATE
+    nexus_mcp
+    nexus_proto
+    GTest::gtest_main
+)
+protobuf_generate(
+    LANGUAGE cpp
+    TARGET tool_registry_test
+    PROTOS schema_test.proto
+    IMPORT_DIRS ${PROJECT_SOURCE_DIR}/proto
+)
+target_include_directories(tool_registry_test PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_BINARY_DIR}/proto
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+gtest_discover_tests(tool_registry_test)
+
+# ---- MCP stdio Gateway tests (TASK-022) ------------------------------------
+add_executable(mcp_server_test mcp_server_test.cpp)
+target_link_libraries(mcp_server_test
+  PRIVATE
+    nexus_mcp
+    nexus_rpc
+    nexus_proto
+    GTest::gtest_main
+)
+target_include_directories(mcp_server_test PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_BINARY_DIR}/proto
+)
+gtest_discover_tests(mcp_server_test)
 

@@ -12,7 +12,10 @@ add_library(NexusRPC::proto ALIAS nexus_proto)
 protobuf_generate(
     LANGUAGE cpp
     TARGET nexus_proto
-    PROTOS examples/weather.proto examples/echo.proto
+    PROTOS
+        nexus/options.proto
+        examples/weather.proto
+        examples/echo.proto
     IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
